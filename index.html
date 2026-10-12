@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Track and rank Tachyon house points across four houses.">
+  <meta name="theme-color" content="#090711">
+  <meta name="color-scheme" content="dark">
+  <title>Tachyon | House Points Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to scoreboard</a>
+
+  <div class="ambient" aria-hidden="true">
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+    <div class="noise-overlay"></div>
+  </div>
+  <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+
+  <div class="app-shell" id="appShell">
+    <header class="topbar">
+      <a class="brand" href="#main" aria-label="Tachyon House Cup">
+        <span class="brand-mark" aria-hidden="true">T</span>
+        <span class="brand-text">TACHYON<span class="brand-sub">HOUSE CUP</span></span>
+      </a>
+      <div class="header-actions">
+        <button class="sound-toggle btn fx" id="soundToggle" type="button" aria-pressed="false" aria-label="Sound is off. Enable sound effects.">
+          <svg class="icon-sound-off" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M11 5 6 9H3v6h3l5 4V5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="m16 9 6 6M22 9l-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <svg class="icon-sound-on" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" hidden>
+            <path d="M11 5 6 9H3v6h3l5 4V5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M16 9.5a5 5 0 0 1 0 5M18.5 7a8 8 0 0 1 0 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <span class="sound-toggle-label">Sound off</span>
+        </button>
+        <span class="live-pill"><span class="live-dot" aria-hidden="true"></span>Scoreboard live</span>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="hero-copy-block">
+          <p class="eyebrow">INTER-HOUSE CHAMPIONSHIP <span class="eyebrow-line" aria-hidden="true"></span></p>
+          <h1 id="heroTitle">Every point<br>counts.</h1>
+          <p class="hero-copy">Track scores. Compare houses. Crown the winner.</p>
+          <p class="hero-status"><span class="status-pulse" aria-hidden="true"></span>FOUR HOUSES · ONE CHAMPION</p>
+        </div>
+
+        <div class="black-hole-scene" id="blackHoleScene" aria-hidden="true">
+          <canvas class="black-hole-webgl" id="blackHoleCanvas"></canvas>
+          <!-- CSS fallback, shown only when WebGL is unavailable -->
+          <div class="black-hole">
+            <div class="lensing-ring"></div>
+            <div class="accretion-disk disk-back"></div>
+            <div class="event-horizon"></div>
+            <div class="accretion-disk disk-front"></div>
+            <div class="photon-ring"></div>
+          </div>
+        </div>
+      </section>
+
+      <noscript><p class="noscript">The scoreboard needs JavaScript to run. Please enable it and reload.</p></noscript>
+
+      <section class="score-grid" id="scoreCards" role="group" aria-label="House scores. Select a house to add points to it."></section>
+
+      <div class="content-grid">
+        <section class="panel glass fx entry-panel" aria-labelledby="entryTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">SCORE ENTRY</p>
+              <h2 id="entryTitle">Add points</h2>
+            </div>
+            <span class="heading-icon" aria-hidden="true">＋</span>
+          </div>
+          <form id="pointsForm" novalidate>
+            <label for="houseSelect">Select house</label>
+            <div class="select-wrap">
+              <select id="houseSelect" name="house">
+                <option value="ALPHA">ALPHA</option>
+                <option value="INFER">INFER</option>
+                <option value="MATRIX">MATRIX</option>
+                <option value="LAYER">LAYER</option>
+              </select>
+            </div>
+            <label for="pointsInput">Points earned</label>
+            <div class="input-wrap">
+              <input id="pointsInput" name="points" type="number" min="0" step="1" placeholder="e.g. 25" inputmode="numeric" autocomplete="off" required aria-describedby="formMessage">
+              <span class="input-unit" aria-hidden="true">PTS</span>
+            </div>
+            <p class="form-message" id="formMessage" role="status" aria-live="polite"></p>
+            <button class="primary-button btn fx" type="submit"><span>Add points</span><span class="btn-icon" aria-hidden="true">↗</span></button>
+          </form>
+
+          <div class="winner-callout" id="winnerCallout">
+            <div class="trophy" aria-hidden="true">♛</div>
+            <div>
+              <p class="eyebrow" id="winnerEyebrow">CURRENT LEADER</p>
+              <h3 id="winnerName">NO WINNER YET</h3>
+              <p id="winnerPoints">Award points to start the competition.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel glass fx ranking-panel" aria-labelledby="rankTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">THE LEADERBOARD</p>
+              <h2 id="rankTitle">House rankings</h2>
+            </div>
+            <span class="rank-count">4 houses</span>
+          </div>
+          <ol class="ranking-list" id="rankingList"></ol>
+          <p class="ranking-note"><span class="note-mark" aria-hidden="true">i</span>Tied houses share the same rank. Equal first-place scores are shown together.</p>
+        </section>
+      </div>
+
+      <section class="panel glass fx activity-panel" aria-labelledby="activityTitle">
+        <div class="section-heading activity-heading">
+          <div><p class="eyebrow">RECENT UPDATES</p><h2 id="activityTitle">Activity log</h2></div>
+          <button class="text-button btn" id="clearHistoryButton" type="button">Clear history</button>
+        </div>
+        <div id="activityList" class="activity-list" role="log" aria-label="Recent score updates"></div>
+      </section>
+
+      <div class="footer-actions">
+        <p>Made for the Tachyon House Cup <span aria-hidden="true">•</span> Scores are saved on this device.</p>
+        <button class="reset-button btn fx" id="resetButton" type="button"><span class="btn-icon" aria-hidden="true">↻</span><span>Reset all scores</span></button>
+      </div>
+    </main>
+
+    <footer>TACHYON <span>HOUSE POINTS CALCULATOR</span> <span class="footer-right">PLAY FAIR. AIM HIGH.</span></footer>
+  </div>
+
+  <div class="winner-toast" id="winnerToast" role="status" aria-live="polite" hidden>
+    <span class="winner-toast-icon" aria-hidden="true">♛</span>
+    <div>
+      <p class="eyebrow">NEW LEADER</p>
+      <p class="winner-toast-text" id="winnerToastText"></p>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="confirmModal" hidden>
+    <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmBody">
+      <h2 id="confirmTitle">Confirm action</h2>
+      <p id="confirmBody"></p>
+      <div class="modal-actions">
+        <button class="ghost-button btn" id="confirmCancel" type="button">Cancel</button>
+        <button class="danger-button btn" id="confirmOk" type="button">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
